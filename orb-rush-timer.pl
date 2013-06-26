@@ -118,6 +118,7 @@ sub send_notice {
     # 開始と終了の時間が近づいたらそれぞれアラート
     foreach my $start (@$time) {
         my $pt = Time::Piece->strptime($t->strftime("%Y-%m-%d $start:00 +0900"), '%Y-%m-%d %T %z'); 
+        my $et = localtime($pt->epoch + $present_time * 60);
         #debugln($pt. " - " .$t);
         #debugln($pt->epoch. " - " .$t->epoch);
         # 公演開始１時間前にアラート
@@ -128,7 +129,7 @@ sub send_notice {
             print $stdout_message;
             $stdout_message = "演目：". encode('utf8', $act->{title});
             print $stdout_message;
-            $stdout_message = $present_time ? " (上演時間は$present_time分の予定です)":" (上演時間は2~3時間が目安です)";
+            $stdout_message = $present_time ? " (終了時間は" . encode('utf8', $et->strftime('%H:%M')) . "の予定です)":" (上演時間は2~3時間が目安です)";
             print $stdout_message;
 
             my $message = "\x{03}2,9[ORB注意報]".  encode('utf8', $start) ."より演目が上演されます。混雑に注意しましょう all";
@@ -137,7 +138,7 @@ sub send_notice {
                 message => $message,
             });
             $message = "演目：". encode('utf8', $act->{title});
-            $message .= $present_time ? " (上演時間は$present_time分の予定です)":" (上演時間は2~3時間が目安です)";
+            $message .= $present_time ? " (終了時間は" . encode('utf8', $et->strftime('%H:%M')) . "の予定です)":" (上演時間は2~3時間が目安です)";
             $ua->post($ikachan_url, +{
                 channel => $chan,
                 message => $message,
@@ -147,7 +148,6 @@ sub send_notice {
         next unless $present_time;
         $diff = $t - $pt;
         if ( ($present_time - 31) * 60 < $diff && $diff < ($present_time - 20) * 60 ) {
-            my $et = localtime($pt->epoch + $present_time * 60); 
 
             # 手抜き
             my $stdout_message = encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。";
