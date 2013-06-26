@@ -123,7 +123,7 @@ sub send_notice {
         # 公演開始１時間前にアラート
         my $diff = $pt - $t;
         if ( $debug || 55 * 60 < $diff && $diff < 65 * 60 ) {
-            my $message = encode('utf8', $start) ."より演目が上演されます。混雑に注意しましょう";
+            my $message = encode('utf8', $start) ."より演目が上演されます。混雑に注意しましょう。";
             post_message($ua, "\x{03}2,9[ORB注意報]" . $message);
             print $message;
             $message = "演目：". encode('utf8', $act->{title});
@@ -135,7 +135,7 @@ sub send_notice {
         next unless $present_time;
         $diff = $t - $pt;
         if ( $debug || ($present_time - 31) * 60 < $diff && $diff < ($present_time - 20) * 60 ) {
-            my $message = encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。混雑に注意しましょう";
+            my $message = encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。混雑に注意しましょう。";
             post_message($ua, "\x{03}2,9[ORB注意報]". $message);
             print $message;
             $message = "演目：". encode('utf8', $act->{title});
