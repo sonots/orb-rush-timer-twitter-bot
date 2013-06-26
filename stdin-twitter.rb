@@ -4,10 +4,12 @@ require 'twitter'
 require 'optparse'
 require 'yaml'
 
-args = {}
-OptionParser.new do |parser|
-  # any option??
-  parser.parse!(ARGV)
+$options = {}
+OptionParser.new do |opt|
+  opt.on("-c", "--config=CONFIG", "config file") do |v|
+    $options[:config] = v
+  end
+  opt.parse!(ARGV)
 end
 
 def update(tweet)
@@ -20,7 +22,7 @@ def update(tweet)
 end
 
 def config
-  @config ||= YAML.load_file(File.dirname(__FILE__) + '/config.yml')
+  @config ||= YAML.load_file($options[:config] || (File.dirname(__FILE__) + '/config.yml'))
 end
 
 def main
