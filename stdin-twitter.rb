@@ -31,7 +31,7 @@ def main
     conf.oauth_token_secret = config['oauth_token_secret']
   end
 
-  tweet = STDIN.read
+  tweet = STDIN.read.encode(Encoding::UTF_8, Encoding::UTF_8)
   update(tweet) if tweet.size > 0
 end
 
