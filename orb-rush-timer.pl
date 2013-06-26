@@ -39,9 +39,9 @@ my $time = get_time_table();
  
 # wedataから公演時間を取得
 $present_time = get_present_time();
-debugln("time: $present_time");
+#debugln("time: $present_time");
  
-debugln("$act->{date} @$time : $act->{title} ${present_time}min $act->{url}") if $act->{title};
+#debugln("$act->{date} @$time : $act->{title} ${present_time}min $act->{url}") if $act->{title};
  
 if ( $ikachan_url && $chan ) {
    send_notice();
@@ -123,6 +123,14 @@ sub send_notice {
         # 公演開始１時間前にアラート
         my $diff = $pt - $t;
         if ( 55 * 60 < $diff && $diff < 65 * 60 ) {
+            # 手抜き
+            my $stdout_message = encode('utf8', $start) ."より演目が上演されます。";
+            print $stdout_message;
+            $stdout_message = "演目：". encode('utf8', $act->{title});
+            print $stdout_message;
+            $stdout_message = $present_time ? " (上演時間は$present_time分の予定です)":" (上演時間は2~3時間が目安です)";
+            print $stdout_message;
+
             my $message = "\x{03}2,9[ORB注意報]".  encode('utf8', $start) ."より演目が上演されます。混雑に注意しましょう all";
             $ua->post($ikachan_url, +{
                 channel => $chan,
@@ -140,6 +148,13 @@ sub send_notice {
         $diff = $t - $pt;
         if ( ($present_time - 31) * 60 < $diff && $diff < ($present_time - 20) * 60 ) {
             my $et = localtime($pt->epoch + $present_time * 60); 
+
+            # 手抜き
+            my $stdout_message = encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。";
+            print $stdout_message;
+            $stdout_message = "演目：". encode('utf8', $act->{title});
+            print $stdout_message;
+
             my $message = "\x{03}2,9[ORB注意報]".  encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。混雑に注意しましょう all";
             $ua->post($ikachan_url, +{
                 channel => $chan,
