@@ -14,11 +14,13 @@ use Data::Dumper;
 my $chan = '';
 my $ikachan_url = '';
 my $present_time = undef;
+my $debug = undef;
  
 GetOptions(
     "channel=s" => \$chan,
     "ikachan_url=s" => \$ikachan_url,
     "present_time=i" => \$present_time, 
+    "debug" => \$debug,
 );
  
 # 今日の日付情報を整理
@@ -40,12 +42,9 @@ my $time = get_time_table();
 # wedataから公演時間を取得
 $present_time = get_present_time();
 #debugln("time: $present_time");
- 
 #debugln("$act->{date} @$time : $act->{title} ${present_time}min $act->{url}") if $act->{title};
  
-if ( $ikachan_url && $chan ) {
-   send_notice();
-}
+send_notice();
  
 # 今日の演目情報を取得する
 sub get_today_act {
@@ -123,52 +122,35 @@ sub send_notice {
         #debugln($pt->epoch. " - " .$t->epoch);
         # 公演開始１時間前にアラート
         my $diff = $pt - $t;
-        if ( 55 * 60 < $diff && $diff < 65 * 60 ) {
-            # 手抜き
-            my $stdout_message = encode('utf8', $start) ."より演目が上演されます。";
-            print $stdout_message;
-            $stdout_message = "演目：". encode('utf8', $act->{title});
-            print $stdout_message;
-            $stdout_message = $present_time ? " (終了時間は" . encode('utf8', $et->strftime('%H:%M')) . "の予定です)":" (上演時間は2~3時間が目安です)";
-            print $stdout_message;
-
-            my $message = "\x{03}2,9[ORB注意報]".  encode('utf8', $start) ."より演目が上演されます。混雑に注意しましょう all";
-            $ua->post($ikachan_url, +{
-                channel => $chan,
-                message => $message,
-            });
+        if ( $debug || 55 * 60 < $diff && $diff < 65 * 60 ) {
+            my $message = encode('utf8', $start) ."より演目が上演されます。混雑に注意しましょう";
+            post_message($ua, "\x{03}2,9[ORB注意報]" . $message);
+            print $message;
             $message = "演目：". encode('utf8', $act->{title});
             $message .= $present_time ? " (終了時間は" . encode('utf8', $et->strftime('%H:%M')) . "の予定です)":" (上演時間は2~3時間が目安です)";
-            $ua->post($ikachan_url, +{
-                channel => $chan,
-                message => $message,
-            });
+            post_message($ua, $message);
+            print $message;
         }
         # 公演時間が解れば機能する
         next unless $present_time;
         $diff = $t - $pt;
-        if ( ($present_time - 31) * 60 < $diff && $diff < ($present_time - 20) * 60 ) {
-
-            # 手抜き
-            my $stdout_message = encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。";
-            print $stdout_message;
-            $stdout_message = "演目：". encode('utf8', $act->{title});
-            print $stdout_message;
-
-            my $message = "\x{03}2,9[ORB注意報]".  encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。混雑に注意しましょう all";
-            $ua->post($ikachan_url, +{
-                channel => $chan,
-                message => $message,
-            });
+        if ( $debug || ($present_time - 31) * 60 < $diff && $diff < ($present_time - 20) * 60 ) {
+            my $message = encode('utf8', $et->strftime('%H:%M')) ."に演目が終了予定です。混雑に注意しましょう";
+            post_message($ua, "\x{03}2,9[ORB注意報]". $message);
+            print $message;
             $message = "演目：". encode('utf8', $act->{title});
-            $ua->post($ikachan_url, +{
-                channel => $chan,
-                message => $message,
-            });
+            post_message($ua, $message);
+            print $message;
         }
     }
 }
- 
+
+sub post_message {
+    my $ua = shift;
+    my $message = shift;
+    $ua->post($ikachan_url, +{ channel => $chan, message => $message }) if $ikachan_url && $chan;
+}
+
 sub get_present_time {
     my $ua = LWP::UserAgent->new(
         agent   => 'crawl.hakumai.net',
