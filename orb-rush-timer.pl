@@ -32,7 +32,7 @@ my $ym = decode('utf8', sprintf('%s年%s月', $t->year, $t->mon));
 my $act = get_today_act();
  
 unless( $act->{title} ) {
-    print("no act found.\n");
+    # print("no act found.\n");
     exit;
 }
  
